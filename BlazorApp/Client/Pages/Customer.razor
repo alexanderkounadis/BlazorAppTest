@@ -1,0 +1,100 @@
+﻿@page "/customer"
+@page "/customer/{id:guid}"
+@inject ICustomerService CustomerService
+@inject NavigationManager NavigationManager
+
+@if (Id  == Guid.Empty)
+{
+    <PageTitle>Create a new Customer</PageTitle>
+    <h3>Create a new Customer</h3>
+}
+else
+{
+    <PageTitle>Edit @customer.ContactName</PageTitle>
+    <h3>Edit @customer.ContactName</h3>
+}
+
+<EditForm Model="customer" OnSubmit="HandleSubmit">
+    <div>
+        <label for="name">Name</label>
+        <InputText id="name" @bind-Value="customer.ContactName" class="form-control" />
+    </div>
+    <div>
+        <label for="company">Company</label>
+        <InputText id="company" @bind-Value="customer.CompanyName" class="form-control" />
+    </div>
+    <div>
+        <label for="phone">Phone</label>
+        <InputText id="phone" @bind-Value="customer.Phone" class="form-control" />
+    </div>
+    <div>
+        <label for="address">Address</label>
+        <InputText id="address" @bind-Value="customer.Address" class="form-control" />
+    </div>
+    <div>
+        <label for="city">City</label>
+        <InputText id="city" @bind-Value="customer.City" class="form-control" />
+    </div>
+    <div>
+        <label for="region">Region</label>
+        <InputText id="region" @bind-Value="customer.Region" class="form-control" />
+    </div>
+    <div>
+        <label for="zip">Postal Code</label>
+        <InputText id="zip" @bind-Value="customer.PostalCode" class="form-control" />
+    </div>
+    <div>
+        <label for="zip">Country</label>
+        <InputText id="country" @bind-Value="customer.Country" class="form-control" />
+    </div>
+    <br />
+    <button type="submit" class="btn btn-primary">@btnText</button>
+    <button type="button" class="btn btn-danger"
+            @onclick="DeleteCustomer">
+        Delete Customer
+    </button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    string btnText = string.Empty;
+
+    BlazorApp.Shared.Customer customer =
+        new BlazorApp.Shared.Customer { ContactName = "New Customer" };
+
+    protected override void OnInitialized()
+    {
+        btnText = Id == Guid.Empty ? "Save New Customer" : "Update Customer";
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id != Guid.Empty)
+        {
+            var result = await CustomerService.GetCustomerById(Id);
+            if (result is not null)
+                customer = result;
+            else
+                NavigationManager.NavigateTo("/customer");
+        }
+    }
+
+    async Task HandleSubmit()
+    {
+        if (Id == Guid.Empty)
+        {
+            await CustomerService.CreateCustomer(customer);
+        }
+        else
+        {
+            await CustomerService.UpdateCustomer(Id, customer);
+        }
+    }
+
+    async Task DeleteCustomer()
+    {
+        await CustomerService.DeleteCustomer(customer.Id);
+    }
+}
